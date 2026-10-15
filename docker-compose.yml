@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: smart-library-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: smart_library
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: smart-library-backend
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/smart_library
+      # 👇  change this secret in production!
+      SECRET_KEY: your-super-secret-key-change-in-production-min-32-chars
+      DEBUG: "true"
+      ENVIRONMENT: development
+      # Allow the React dev server (both from host and from the frontend container)
+      BACKEND_CORS_ORIGINS: '["http://localhost:5173","http://frontend:5173"]'
+    ports:
+      # Host port 8001 mapped to container port 8000 to avoid conflict with existing services on 8000
+      - "8001:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: smart-library-frontend
+    environment:
+      # The browser calls the API through the published host port.
+      VITE_API_URL: http://localhost:8001
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      # Prevent the host node_modules from being mounted into the container
+      - /app/node_modules
+    depends_on:
+      - backend
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+
+volumes:
+  postgres_data:
