@@ -220,10 +220,16 @@ async def seed_database():
             },
         ]
 
+        books = []
         for book_data in books_data:
             book = Book(**book_data, available_copies=book_data["total_copies"])
             db.add(book)
+            books.append(book)
         await db.flush()
+
+        for book in books:
+            for copy_number in range(1, book.total_copies + 1):
+                db.add(BookCopy(book_id=book.id, copy_number=copy_number))
 
         # Create members
         members = [

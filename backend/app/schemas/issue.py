@@ -16,7 +16,7 @@ class IssueTransactionBase(BaseModel):
 
 
 class IssueTransactionCreate(IssueTransactionBase):
-    pass
+    borrow_days: Optional[int] = Field(None, ge=1, le=365)
 
 
 class IssueTransactionUpdate(BaseModel):

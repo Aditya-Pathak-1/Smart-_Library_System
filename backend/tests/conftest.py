@@ -170,18 +170,12 @@ async def test_book(db_session: AsyncSession, test_category: Category, test_auth
     db_session.add(book)
     await db_session.commit()
     await db_session.refresh(book)
-    return book
-
-
-@pytest.fixture
-async def test_book_copies(db_session: AsyncSession, test_book: Book):
-    copies = [
-        BookCopy(book_id=test_book.id, copy_number=copy_number)
-        for copy_number in range(1, test_book.total_copies + 1)
-    ]
-    db_session.add_all(copies)
+    db_session.add_all(
+        BookCopy(book_id=book.id, copy_number=copy_number)
+        for copy_number in range(1, book.total_copies + 1)
+    )
     await db_session.commit()
-    return copies
+    return book
 
 
 @pytest.fixture

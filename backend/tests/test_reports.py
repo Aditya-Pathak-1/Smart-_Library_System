@@ -33,6 +33,32 @@ class TestReports:
         assert len(data["labels"]) == 7
 
     @pytest.mark.asyncio
+    async def test_issue_created_today_appears_on_dashboard_chart(
+        self,
+        client: AsyncClient,
+        admin_token,
+        librarian_token,
+        test_member,
+        test_book,
+    ):
+        issue_response = await client.post(
+            "/api/v1/issues/issue",
+            json={"member_id": test_member.id, "book_id": test_book.id},
+            headers={"Authorization": f"Bearer {librarian_token}"},
+        )
+        assert issue_response.status_code == 201
+
+        chart_response = await client.get(
+            "/api/v1/reports/dashboard/charts/issue-return",
+            params={"days": 7},
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert chart_response.status_code == 200
+        chart = chart_response.json()
+        assert chart["labels"][-1] == date.today().strftime("%d/%m")
+        assert chart["issues"][-1] == 1
+
+    @pytest.mark.asyncio
     async def test_category_chart(self, client: AsyncClient, admin_token):
         response = await client.get(
             "/api/v1/reports/dashboard/charts/categories",

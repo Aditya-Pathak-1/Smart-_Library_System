@@ -42,7 +42,13 @@ export const IssuesPage = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<IssueTransaction | null>(null)
   const [issuing, setIssuing] = useState(false)
   const [returning, setReturning] = useState(false)
-  const [issueForm, setIssueForm] = useState({ member_id: '', book_id: '', due_date: '', notes: '' })
+  const [issueForm, setIssueForm] = useState({
+    member_id: '',
+    book_id: '',
+    borrow_days: 'default',
+    due_date: '',
+    notes: '',
+  })
   const [returnForm, setReturnForm] = useState({ transaction_id: '', notes: '' })
 
   const fetchTransactions = async () => {
@@ -91,13 +97,23 @@ export const IssuesPage = () => {
       await issuesApi.issue({
         member_id: parseInt(issueForm.member_id),
         book_id: parseInt(issueForm.book_id),
-        due_date: issueForm.due_date || undefined,
+        due_date: issueForm.borrow_days === 'custom' ? issueForm.due_date : undefined,
+        borrow_days: issueForm.borrow_days === 'custom' || issueForm.borrow_days === 'default'
+          ? undefined
+          : parseInt(issueForm.borrow_days),
         notes: issueForm.notes || undefined,
       })
       toast.success('Book issued successfully')
       setIssueDialogOpen(false)
-      setIssueForm({ member_id: '', book_id: '', due_date: '', notes: '' })
-      fetchTransactions()
+      setIssueForm({ member_id: '', book_id: '', borrow_days: 'default', due_date: '', notes: '' })
+      const listWasFiltered = Boolean(search || memberFilter || bookFilter || statusFilter || page !== 1)
+      setSearch('')
+      setMemberFilter('')
+      setBookFilter('')
+      setStatusFilter('')
+      setPage(1)
+      setSearchParams({}, { replace: true })
+      if (!listWasFiltered) fetchTransactions()
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to issue book')
     } finally {
@@ -138,10 +154,7 @@ export const IssuesPage = () => {
 
   const getOverdueInfo = (txn: IssueTransaction) => {
     if (txn.status === 'returned') return { overdue: false, days: 0 }
-    const today = new Date()
-    const due = new Date(txn.due_date)
-    const diffTime = today.getTime() - due.getTime()
-    const days = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
+    const days = calculateOverdueDays(txn.due_date)
     return { overdue: days > 0, days }
   }
 
@@ -162,7 +175,7 @@ export const IssuesPage = () => {
             Return Book
           </Button>
           <Button onClick={() => {
-            setIssueForm({ member_id: '', book_id: '', due_date: '', notes: '' })
+            setIssueForm({ member_id: '', book_id: '', borrow_days: 'default', due_date: '', notes: '' })
             setIssueDialogOpen(true)
           }}>
             <Plus className="mr-2 h-4 w-4" />
@@ -371,12 +384,28 @@ export const IssuesPage = () => {
               options={books.map(b => ({ value: String(b.id), label: `${b.title} (Available: ${b.available_copies})` }))}
               error={!issueForm.book_id ? 'Required' : undefined}
             />
-            <Input
-              label="Due Date"
-              type="date"
-              value={issueForm.due_date}
-              onChange={(e) => setIssueForm({ ...issueForm, due_date: e.target.value })}
+            <Select
+              value={issueForm.borrow_days}
+              onValueChange={(v) => setIssueForm({ ...issueForm, borrow_days: v, due_date: '' })}
+              label="Return period"
+              options={[
+                { value: 'default', label: 'Library default' },
+                { value: '7', label: '1 week (7 days)' },
+                { value: '14', label: '14 days' },
+                { value: '30', label: '1 month (30 days)' },
+                { value: 'custom', label: 'Choose a due date' },
+              ]}
             />
+            {issueForm.borrow_days === 'custom' && (
+              <Input
+                label="Due Date *"
+                type="date"
+                min={new Date().toISOString().slice(0, 10)}
+                required
+                value={issueForm.due_date}
+                onChange={(e) => setIssueForm({ ...issueForm, due_date: e.target.value })}
+              />
+            )}
             <Input
               label="Notes"
               placeholder="Optional notes"

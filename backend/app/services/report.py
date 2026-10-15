@@ -85,7 +85,7 @@ class ReportService:
         )
 
     async def get_issue_return_chart(self, days: int = 30) -> IssueReturnChartData:
-        start_date = date.today() - timedelta(days=days)
+        start_date = date.today() - timedelta(days=days - 1)
         labels = []
         issues = []
         returns = []

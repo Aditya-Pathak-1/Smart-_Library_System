@@ -197,6 +197,7 @@ class BookService:
             book.available_copies += diff
             if book.available_copies < 0:
                 book.available_copies = 0
+            book.total_copies = new_total
 
         for field, value in update_data.items():
             if field != "total_copies":

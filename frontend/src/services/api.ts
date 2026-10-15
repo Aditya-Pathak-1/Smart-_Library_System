@@ -120,7 +120,7 @@ export const issuesApi = {
 
   get: (transactionId: string) => api.get<IssueTransaction>(`/issues/transactions/${transactionId}`),
 
-  issue: (data: { member_id: number; book_id: number; copy_id?: number; due_date?: string; notes?: string }) =>
+  issue: (data: { member_id: number; book_id: number; copy_id?: number; due_date?: string; borrow_days?: number; notes?: string }) =>
     api.post<IssueTransaction>('/issues/issue', data),
 
   return: (data: { transaction_id: string; copy_id?: number; notes?: string }) =>

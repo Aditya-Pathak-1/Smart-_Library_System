@@ -65,11 +65,13 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
 }
 
 export function calculateOverdueDays(dueDate: string | Date): number {
-  const due = typeof dueDate === 'string' ? new Date(dueDate) : dueDate
   const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const diffTime = today.getTime() - due.getTime()
-  return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
+  const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+  const due = typeof dueDate === 'string'
+    ? dueDate.slice(0, 10).split('-').map(Number)
+    : [dueDate.getFullYear(), dueDate.getMonth() + 1, dueDate.getDate()]
+  const dueUtc = Date.UTC(due[0], due[1] - 1, due[2])
+  return Math.max(0, Math.floor((todayUtc - dueUtc) / (1000 * 60 * 60 * 24)))
 }
 
 export function calculateFine(overdueDays: number, finePerDay: number, gracePeriod: number = 0): number {

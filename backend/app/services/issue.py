@@ -69,12 +69,19 @@ class IssueService:
             )
             copy = result.scalar_one_or_none()
             if not copy:
-                raise HTTPException(status_code=400, detail="No available copies")
+                result = await self.db.execute(
+                    select(func.max(BookCopy.copy_number)).where(BookCopy.book_id == data.book_id)
+                )
+                copy_number = (result.scalar() or 0) + 1
+                copy = BookCopy(book_id=book.id, copy_number=copy_number)
+                self.db.add(copy)
+                await self.db.flush()
 
         # Get settings for due date
         settings = await self.get_settings()
         issue_date = date.today()
-        due_date = data.due_date or (issue_date + timedelta(days=settings.default_borrowing_days))
+        borrowing_days = data.borrow_days or settings.default_borrowing_days
+        due_date = data.due_date or (issue_date + timedelta(days=borrowing_days))
 
         # Create transaction
         transaction = IssueTransaction(

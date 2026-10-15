@@ -230,7 +230,7 @@ class TestBookCopies:
     async def test_create_copy(self, client: AsyncClient, admin_token, test_book):
         response = await client.post(
             f"/api/v1/books/{test_book.id}/copies",
-            json={},
+            json={"book_id": test_book.id, "copy_number": test_book.total_copies + 1},
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 201

@@ -182,19 +182,19 @@ export const BooksPage = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead onClick={() => handleSort('title')} className="cursor-pointer select-none flex items-center gap-1">
+                <TableHead onClick={() => handleSort('title')} className="cursor-pointer select-none">
                   Title <SortIcon column="title" />
                 </TableHead>
-                <TableHead onClick={() => handleSort('author')} className="cursor-pointer select-none flex items-center gap-1">
+                <TableHead onClick={() => handleSort('author')} className="cursor-pointer select-none">
                   Author <SortIcon column="author" />
                 </TableHead>
-                <TableHead onClick={() => handleSort('category')} className="cursor-pointer select-none flex items-center gap-1">
+                <TableHead onClick={() => handleSort('category')} className="cursor-pointer select-none">
                   Category <SortIcon column="category" />
                 </TableHead>
-                <TableHead onClick={() => handleSort('publication_year')} className="cursor-pointer select-none flex items-center gap-1">
+                <TableHead onClick={() => handleSort('publication_year')} className="cursor-pointer select-none">
                   Year <SortIcon column="publication_year" />
                 </TableHead>
-                <TableHead onClick={() => handleSort('available_copies')} className="cursor-pointer select-none flex items-center gap-1">
+                <TableHead onClick={() => handleSort('available_copies')} className="cursor-pointer select-none">
                   Available <SortIcon column="available_copies" />
                 </TableHead>
                 <TableHead className="w-48">Status</TableHead>
